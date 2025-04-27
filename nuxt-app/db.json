@@ -1,0 +1,44 @@
+{
+    "products": [
+      { 
+        "id": 1, 
+        "name": "Smartphone XS", 
+        "description": "Das neueste Smartphone mit allen Features", 
+        "price": 699.99, 
+        "category": "electronics", 
+        "imageUrl": "/api/placeholder/400/300",
+        "inStock": true
+      },
+      { 
+        "id": 2, 
+        "name": "Laptop Pro", 
+        "description": "Leistungsstarker Laptop für Profis", 
+        "price": 1299.99, 
+        "category": "electronics", 
+        "imageUrl": "/api/placeholder/400/300",
+        "inStock": true
+      },
+      { 
+        "id": 3, 
+        "name": "Kopfhörer Wireless", 
+        "description": "Kabellose Kopfhörer mit Noise-Cancelling", 
+        "price": 199.99, 
+        "category": "audio", 
+        "imageUrl": "/api/placeholder/400/300",
+        "inStock": true
+      },
+      { 
+        "id": 4, 
+        "name": "Smart Watch", 
+        "description": "Intelligente Uhr für Fitness und Alltag", 
+        "price": 249.99, 
+        "category": "wearables", 
+        "imageUrl": "/api/placeholder/400/300",
+        "inStock": false
+      }
+    ],
+    "cart": [
+    ],
+    "orders": [
+    ]
+  }

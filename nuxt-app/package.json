@@ -7,11 +7,21 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "start": "nuxt start",
+    "mock-api": "json-server --watch db.json --port 3001"
   },
   "dependencies": {
     "nuxt": "^3.16.2",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@nuxtjs/dotenv": "^1.4.2",
+    "@types/node": "^22.15.2",
+    "json-server": "^1.0.0-beta.3"
   }
+
+
+
 }
