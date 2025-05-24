@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config
+  namespace: items-app
+data:
+  NODE_ENV: "production"
+  PORT: "3000"
+  HOST: "0.0.0.0"
+  NUXT_PUBLIC_API_URL: "http://backend-service:8080"
+  NUXT_PUBLIC_APP_NAME: "Item Management System"

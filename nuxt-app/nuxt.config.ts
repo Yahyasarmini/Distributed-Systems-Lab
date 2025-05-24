@@ -3,29 +3,36 @@ export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
   devtools: { enabled: true },
 
-  // Allgemeine Konfigurationen
-
-  modules: [
-    '@nuxtjs/dotenv',
-    '@nuxtjs/axios',
-  ],
-
-  plugins: [
-    '~/plugins/api.js',
-  ],
-
-
-  // Runtime-Konfigurationen (client- und serverseitig verfügbar)
+  // External configuration (12-Factor App)
   runtimeConfig: {
+    // Private keys (server-only)
+    apiSecret: process.env.API_SECRET || 'default-secret',
+    
+    // Public keys (available client-side)
     public: {
-      apiBaseUrl: process.env.API_BASE_URL || 'http://localhost:3001/api',
-      appName: process.env.APP_NAME || 'Distributed Systems Lab - Shop App',
-      debug: process.env.DEBUG === 'true'
-    },
-    private: {
-      apiToken: process.env.API_TOKEN
+      apiUrl: process.env.NUXT_PUBLIC_API_URL || 'http://localhost:8080',
+      appName: process.env.NUXT_PUBLIC_APP_NAME || 'Item Management System',
+      environment: process.env.NODE_ENV || 'development'
     }
   },
 
-  
-});
+  // Server configuration
+  nitro: {
+    preset: 'node-server',
+  },
+
+  // Enable SSR (Server-Side Rendering) as required
+  ssr: true,
+
+  // App configuration
+  app: {
+    head: {
+      title: 'Item Management System',
+      meta: [
+        { charset: 'utf-8' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+        { name: 'description', content: 'Distributed Systems Lab - Item Management' }
+      ]
+    }
+  }
+})

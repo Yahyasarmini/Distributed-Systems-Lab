@@ -1,23 +1,50 @@
-# Use the official Node.js image as the base image
-FROM node:18-alpine
+# Build stage
+FROM node:18-alpine AS builder
 
-# Set the working directory in the container
+# Install dependencies for building
+RUN apk add --no-cache python3 make g++
+
 WORKDIR /app
 
-# Copy package.json and package-lock.json to the working directory
+# Copy package files
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install
+RUN npm ci --only=production
 
-# Copy the rest of the application code to the working directory
+# Copy source code
 COPY . .
 
-# Build the Nuxt.js application
+# Build the application
 RUN npm run build
 
-# Expose the port the app runs on
+# Production stage
+FROM node:18-alpine AS production
+
+# Install dumb-init for proper signal handling
+RUN apk add --no-cache dumb-init
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+
+WORKDIR /app
+
+# Copy built application from builder stage
+COPY --from=builder --chown=nodejs:nodejs /app/.output /app/.output
+COPY --from=builder --chown=nodejs:nodejs /app/package.json /app/package.json
+
+# Switch to non-root user
+USER nodejs
+
+# Expose port (configurable via environment variable)
 EXPOSE 3000
 
+# Set environment to production
+ENV NODE_ENV=production
+
+# Use dumb-init to handle signals properly
+ENTRYPOINT ["dumb-init", "--"]
+
 # Start the application
-CMD ["npm", "start"]
+CMD ["node", ".output/server/index.mjs"]

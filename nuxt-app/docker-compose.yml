@@ -1,16 +1,55 @@
 version: '3.8'
+
 services:
-  app:
+  frontend:
     build:
       context: .
       dockerfile: Dockerfile
-    volumes:
-      - .:/app
-      - app_node_modules:/app/node_modules
+    container_name: items-frontend
+    restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "${PORT:-3000}:3000"
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=${PORT:-3000}
+      - HOST=0.0.0.0
+      - NUXT_PUBLIC_API_URL=${NUXT_PUBLIC_API_URL:-http://backend:8080}
+      - NUXT_PUBLIC_APP_NAME=${NUXT_PUBLIC_APP_NAME:-Item Management System}
+      - API_SECRET=${API_SECRET}
+    networks:
+      - items-network
+    volumes:
+      - .:/app:cached
+      - /app/node_modules
+      - /app/.nuxt
+      - /app/.output
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000', (r) => r.statusCode === 200 ? process.exit(0) : process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Mock backend service for testing
+  backend-mock:
+    image: mockoon/cli:latest
+    container_name: items-backend-mock
+    command: ["--data", "/mockoon/api.json", "--port", "8080"]
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./mockoon:/mockoon:ro
+    networks:
+      - items-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/items"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  items-network:
+    driver: bridge
 
 volumes:
   app_node_modules:
