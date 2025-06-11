@@ -1,22 +1,14 @@
 # Build stage
-FROM python:3.11-slim
+FROM node:20-alpine AS builder
 
 WORKDIR /app
-
-# Install dependencies for building
-RUN apt-get update && apt-get install -y \
-    && rm -rf /var/lib/apt/lists/*
+RUN apk update && apk upgrade && apk add --no-cache dumb-init
 
 # Copy package files
 COPY package*.json ./
-COPY requirements.txt .
 
-# Install dependencies
-RUN npm ci --only=production
-RUN pip install --no-cache-dir -r requirements.txt
-
-#non-root user
-RUN useradd -m -u 1001 fastapi
+# Install all dependencies (including devDependencies for build)
+RUN npm ci
 
 # Copy source code
 COPY . .
@@ -37,17 +29,23 @@ RUN addgroup -g 1001 -S nodejs && \
 WORKDIR /app
 
 # Copy built application from builder stage
+# Nuxt 3 output is in .output directory
 COPY --from=builder --chown=nodejs:nodejs /app/.output /app/.output
-COPY --from=builder --chown=nodejs:nodejs /app/package.json /app/package.json
 
 # Switch to non-root user
 USER nodejs
 
-# Expose port (configurable via environment variable)
+# Expose port
 EXPOSE 3000
 
-# Set environment to production
+# Set production environment
 ENV NODE_ENV=production
+ENV HOST=0.0.0.0
+ENV PORT=3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3000/', (r) => r.statusCode === 200 ? process.exit(0) : process.exit(1))"
 
 # Use dumb-init to handle signals properly
 ENTRYPOINT ["dumb-init", "--"]

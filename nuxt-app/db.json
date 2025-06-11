@@ -35,7 +35,29 @@
         "category": "wearables", 
         "imageUrl": "/api/placeholder/400/300",
         "inStock": false
-      }
+      },
+
+      {
+        "items": [
+        {
+        "id": 1,
+        "name": "Apple",
+        "quantity": 42
+        },
+        {
+        "id": 2,
+        "name": "Banana",
+        "quantity": 35
+        },
+        {
+        "id": 3,
+        "name": "Orange",
+        "quantity": 28
+            }
+          ]
+          }
+
+
     ],
     "cart": [
     ],
