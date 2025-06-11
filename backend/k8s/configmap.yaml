@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: items-app
+data:
+  ENVIRONMENT: "production"
+  PORT: "8080"
+  HOST: "0.0.0.0"
+  LOG_LEVEL: "info"
+  ALLOWED_ORIGINS: "http://frontend-service"

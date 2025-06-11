@@ -1,16 +1,22 @@
 # Build stage
-FROM node:18-alpine AS builder
-
-# Install dependencies for building
-RUN apk add --no-cache python3 make g++
+FROM python:3.11-slim
 
 WORKDIR /app
 
+# Install dependencies for building
+RUN apt-get update && apt-get install -y \
+    && rm -rf /var/lib/apt/lists/*
+
 # Copy package files
 COPY package*.json ./
+COPY requirements.txt .
 
 # Install dependencies
 RUN npm ci --only=production
+RUN pip install --no-cache-dir -r requirements.txt
+
+#non-root user
+RUN useradd -m -u 1001 fastapi
 
 # Copy source code
 COPY . .
@@ -19,7 +25,7 @@ COPY . .
 RUN npm run build
 
 # Production stage
-FROM node:18-alpine AS production
+FROM node:20-alpine AS production
 
 # Install dumb-init for proper signal handling
 RUN apk add --no-cache dumb-init
