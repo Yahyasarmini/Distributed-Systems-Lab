@@ -3,6 +3,8 @@ export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
   devtools: { enabled: true },
 
+
+
   // External configuration (12-Factor App)
   runtimeConfig: {
     // Private keys (server-only)
@@ -17,8 +19,14 @@ export default defineNuxtConfig({
   },
 
   // Server configuration
-  nitro: {
-    preset: 'node-server',
+   nitro: {
+    devProxy: {
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        prependPath: true,
+      }
+    }
   },
 
   // Enable SSR (Server-Side Rendering) as required
@@ -35,4 +43,5 @@ export default defineNuxtConfig({
       ]
     }
   }
+
 })
