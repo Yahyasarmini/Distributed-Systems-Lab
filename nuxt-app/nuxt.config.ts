@@ -3,8 +3,6 @@ export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
   devtools: { enabled: true },
 
-
-
   // External configuration (12-Factor App)
   runtimeConfig: {
     // Private keys (server-only)
@@ -12,14 +10,19 @@ export default defineNuxtConfig({
     
     // Public keys (available client-side)
     public: {
-      apiUrl: process.env.NUXT_PUBLIC_API_URL || 'http://localhost:8080',
+      // ✅ Korrekte Default-URL für Docker-Umgebung
+      apiUrl: process.env.NUXT_PUBLIC_API_URL || (
+        process.env.NODE_ENV === 'production' 
+          ? 'http://fastapi-backend:8080'  // Docker service name
+          : 'http://localhost:8080'        // Development
+      ),
       appName: process.env.NUXT_PUBLIC_APP_NAME || 'Item Management System',
       environment: process.env.NODE_ENV || 'development'
     }
   },
 
   // Server configuration
-   nitro: {
+  nitro: {
     devProxy: {
       '/api': {
         target: 'http://localhost:8080',
@@ -43,5 +46,4 @@ export default defineNuxtConfig({
       ]
     }
   }
-
 })

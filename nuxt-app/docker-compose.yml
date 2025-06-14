@@ -1,9 +1,10 @@
 version: '3.8'
 
 services:
+  # FastAPI Backend Service
   fastapi-backend:
     build:
-      context: .
+      context: ./backend  # Annahme: Backend-Code ist in /backend Ordner
       dockerfile: Dockerfile
     container_name: items-backend
     restart: unless-stopped
@@ -25,9 +26,7 @@ services:
       retries: 3
       start_period: 40s
 
-networks:
-  items-network:
-    driver: bridge
+  # Nuxt Frontend Service
   frontend:
     build:
       context: .
@@ -40,11 +39,14 @@ networks:
       - NODE_ENV=${NODE_ENV:-production}
       - PORT=${PORT:-3000}
       - HOST=0.0.0.0
-      - NUXT_PUBLIC_API_URL=${NUXT_PUBLIC_API_URL:-http://backend:8080}
+      # ✅ Korrekte Service-Namen verwenden
+      - NUXT_PUBLIC_API_URL=${NUXT_PUBLIC_API_URL:-http://fastapi-backend:8080}
       - NUXT_PUBLIC_APP_NAME=${NUXT_PUBLIC_APP_NAME:-Item Management System}
       - API_SECRET=${API_SECRET}
     networks:
       - items-network
+    depends_on:
+      - fastapi-backend
     volumes:
       - .:/app:cached
       - /app/node_modules
@@ -57,13 +59,13 @@ networks:
       retries: 3
       start_period: 40s
 
-  # Mock backend service for testing
+  # Mock backend service for testing (alternative zum FastAPI backend)
   backend-mock:
     image: mockoon/cli:latest
     container_name: items-backend-mock
     command: ["--data", "/mockoon/api.json", "--port", "8080"]
     ports:
-      - "8080:8080"
+      - "8081:8080"  # ✅ Anderen Port verwenden um Konflikte zu vermeiden
     volumes:
       - ./mockoon:/mockoon:ro
     networks:
@@ -73,6 +75,12 @@ networks:
       interval: 30s
       timeout: 10s
       retries: 3
+    profiles:
+      - mock  # Nur starten wenn explizit angefordert
+
+networks:
+  items-network:
+    driver: bridge
 
 volumes:
   app_node_modules:

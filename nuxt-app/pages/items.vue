@@ -2,6 +2,14 @@
   <div class="container">
     <h1>Items Management</h1>
     
+    <!-- Connection Status -->
+    <div v-if="connectionError" class="connection-error">
+      <h3>Verbindungsproblem</h3>
+      <p>{{ connectionError }}</p>
+      <button @click="testConnection">Verbindung testen</button>
+      <p><strong>API URL:</strong> {{ apiUrl }}</p>
+    </div>
+    
     <!-- Add Item Form -->
     <div class="form-section">
       <h2>Add New Item</h2>
@@ -17,7 +25,9 @@
           placeholder="Quantity" 
           required
         />
-        <button type="submit">Add Item</button>
+        <button type="submit" :disabled="loading">
+          {{ loading ? 'Wird hinzugefügt...' : 'Add Item' }}
+        </button>
       </form>
     </div>
 
@@ -25,7 +35,10 @@
     <div class="items-section">
       <h2>Items List</h2>
       <div v-if="loading">Loading...</div>
-      <div v-else-if="error" class="error">{{ error }}</div>
+      <div v-else-if="error" class="error">
+        {{ error }}
+        <button @click="fetchItems" class="retry-btn">Retry</button>
+      </div>
       <div v-else-if="items.length === 0">No items found</div>
       <div v-else class="items-grid">
         <div v-for="item in items" :key="item.id" class="item-card">
@@ -60,20 +73,50 @@ const apiUrl = config.public.apiUrl || 'http://localhost:8080'
 const items = ref([])
 const loading = ref(false)
 const error = ref('')
+const connectionError = ref('')
 const newItem = ref({ name: '', quantity: 0 })
 const editItem = ref({ name: '', quantity: 0 })
 const editingId = ref(null)
+
+// Test API connection
+const testConnection = async () => {
+  try {
+    connectionError.value = ''
+    console.log('Testing connection to:', apiUrl)
+    
+    const response = await $fetch(`${apiUrl}/health`, {
+      timeout: 5000
+    })
+    console.log('Health check response:', response)
+    connectionError.value = ''
+  } catch (err) {
+    console.error('Connection test failed:', err)
+    connectionError.value = `Cannot connect to backend at ${apiUrl}. Error: ${err.message}`
+  }
+}
 
 // Fetch all items
 const fetchItems = async () => {
   loading.value = true
   error.value = ''
   try {
-    const response = await $fetch(`${apiUrl}/items`)
+    console.log('Fetching items from:', `${apiUrl}/items`)
+    const response = await $fetch(`${apiUrl}/items`, {
+      timeout: 10000,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    console.log('Items response:', response)
     items.value = response
   } catch (err) {
-    error.value = 'Failed to fetch items'
-    console.error(err)
+    console.error('Error fetching items:', err)
+    error.value = `Failed to fetch items: ${err.message}`
+    
+    // Test connection if fetch fails
+    if (err.message.includes('fetch')) {
+      await testConnection()
+    }
   } finally {
     loading.value = false
   }
@@ -81,16 +124,41 @@ const fetchItems = async () => {
 
 // Create new item
 const createItem = async () => {
+  if (!newItem.value.name.trim()) {
+    error.value = 'Item name is required'
+    return
+  }
+  
+  loading.value = true
+  error.value = ''
+  
   try {
+    console.log('Creating item:', newItem.value)
+    console.log('POST URL:', `${apiUrl}/items`)
+    
     const response = await $fetch(`${apiUrl}/items`, {
       method: 'POST',
-      body: newItem.value
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: newItem.value,
+      timeout: 10000
     })
+    
+    console.log('Create response:', response)
     items.value.push(response)
     newItem.value = { name: '', quantity: 0 }
+    error.value = ''
   } catch (err) {
-    error.value = 'Failed to create item'
-    console.error(err)
+    console.error('Error creating item:', err)
+    error.value = `Failed to create item: ${err.message}`
+    
+    // Detail-logging für besseres Debugging
+    if (err.data) {
+      console.error('Error details:', err.data)
+    }
+  } finally {
+    loading.value = false
   }
 }
 
@@ -111,6 +179,9 @@ const updateItem = async (id) => {
   try {
     const response = await $fetch(`${apiUrl}/items/${id}`, {
       method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
       body: editItem.value
     })
     const index = items.value.findIndex(item => item.id === id)
@@ -119,7 +190,7 @@ const updateItem = async (id) => {
     }
     cancelEdit()
   } catch (err) {
-    error.value = 'Failed to update item'
+    error.value = `Failed to update item: ${err.message}`
     console.error(err)
   }
 }
@@ -134,14 +205,16 @@ const deleteItem = async (id) => {
     })
     items.value = items.value.filter(item => item.id !== id)
   } catch (err) {
-    error.value = 'Failed to delete item'
+    error.value = `Failed to delete item: ${err.message}`
     console.error(err)
   }
 }
 
 // Load items on mount
-onMounted(() => {
-  fetchItems()
+onMounted(async () => {
+  console.log('Component mounted, API URL:', apiUrl)
+  await testConnection()
+  await fetchItems()
 })
 </script>
 
@@ -150,6 +223,19 @@ onMounted(() => {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
+}
+
+.connection-error {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.connection-error h3 {
+  margin-top: 0;
+  color: #856404;
 }
 
 .form-section {
@@ -186,12 +272,26 @@ button:hover {
   background: #0056b3;
 }
 
+button:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
 button.delete {
   background: #dc3545;
 }
 
 button.delete:hover {
   background: #c82333;
+}
+
+button.retry-btn {
+  background: #28a745;
+  margin-left: 10px;
+}
+
+button.retry-btn:hover {
+  background: #218838;
 }
 
 .items-grid {
@@ -227,5 +327,8 @@ button.delete:hover {
   background: #f8d7da;
   border-radius: 4px;
   margin: 10px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 </style>
