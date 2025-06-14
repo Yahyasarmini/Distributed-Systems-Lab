@@ -24,7 +24,7 @@ A cloud-native frontend application built with Nuxt.js 3, implementing the 12-fa
 
 1. **Clone the repository**
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/Yahyasarmini/Distributed-Systems-Lab/tree/main
 cd nuxt-app
 ```
 
