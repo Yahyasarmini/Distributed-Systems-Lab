@@ -1,147 +1,318 @@
-# Distributed-Systems-Lab
+# Distributed Systems Lab - Item Management System
 
-A cloud-native frontend application built with Nuxt.js 3, implementing the 12-factor app methodology and designed for distributed systems.
+A cloud-native application implementing a distributed item management system with separate frontend (Nuxt.js 3) and backend (FastAPI) services, following the 12-factor app methodology.
+
+## 📋 Table of Contents
+
+- [Features](#-features)
+- [Architecture](#-architecture)
+- [Prerequisites](#-prerequisites)
+- [Quick Start](#-quick-start)
+- [Development Setup](#-development-setup)
+  - [Backend Setup (FastAPI)](#backend-setup-with-virtual-environment)
+  - [Frontend Setup (Nuxt.js)](#frontend-setup)
+- [Docker Deployment](#-docker-deployment)
+- [Kubernetes Deployment](#-kubernetes-deployment)
+- [API Documentation](#-api-documentation)
+- [12-Factor Implementation](#-12-factor-implementation)
+- [Testing](#-testing)
+- [Container Images](#-container-images)
 
 ## 🚀 Features
 
-- Server-Side Rendering (SSR) with Nuxt.js 3
-- RESTful API integration
-- Externalized configuration
-- Docker & Kubernetes ready
-- Responsive UI for item management
-- Health checks and monitoring endpoints
+- **Frontend**: Server-Side Rendering (SSR) with Nuxt.js 3
+- **Backend**: RESTful API with FastAPI and automatic OpenAPI documentation
+- **Containerization**: Docker and Docker Compose ready
+- **Orchestration**: Kubernetes manifests with HPA
+- **Configuration**: Fully externalized configuration (12-factor compliant)
+- **CORS**: Configurable cross-origin resource sharing
+- **Health Checks**: Built-in health endpoints for monitoring
+
+## 🏗️ Architecture
+
+```
+┌─────────────────┐         ┌─────────────────┐
+│   Nuxt.js 3     │  HTTP   │    FastAPI      │
+│   Frontend      │ ──────> │    Backend      │
+│   (Port 3000)   │         │   (Port 8080)   │
+└─────────────────┘         └─────────────────┘
+```
 
 ## 📋 Prerequisites
 
-- Node.js 18+ 
-- Docker & Docker Compose
-- Kubernetes cluster (optional)
-- npm or yarn
+- **Python 3.9+** (for backend)
+- **Node.js 18+** (for frontend)
+- **Docker & Docker Compose**
+- **Kubernetes** (optional, for K8s deployment)
+- **Git**
 
-## 🛠️ Installation & Setup
+## 🚀 Quick Start
 
-### Local Development
+### Using Docker Compose (Recommended)
 
-1. **Clone the repository**
 ```bash
-git clone https://github.com/Yahyasarmini/Distributed-Systems-Lab/tree/main
+# Clone the repository
+git clone https://github.com/Yahyasarmini/Distributed-Systems-Lab
+cd Distributed-Systems-Lab
+
+# Start all services
+docker-compose up
+
+# Access the application
+# Frontend: http://localhost:3000
+# Backend API: http://localhost:8080
+# API Docs: http://localhost:8080/docs
+```
+
+## 🛠️ Development Setup
+
+### Backend Setup with Virtual Environment
+
+1. **Navigate to backend directory**
+```bash
+cd backend
+```
+
+2. **Create a Python virtual environment**
+
+**Windows:**
+```bash
+# Create virtual environment
+python -m venv venv
+
+# Activate virtual environment
+venv\Scripts\activate
+```
+
+**macOS/Linux:**
+```bash
+# Create virtual environment
+python3 -m venv venv
+
+# Activate virtual environment
+source venv/bin/activate
+```
+
+3. **Install dependencies**
+```bash
+# Ensure pip is up to date
+pip install --upgrade pip
+
+# Install requirements
+pip install -r requirements.txt
+```
+
+4. **Set environment variables**
+```bash
+# Windows (PowerShell)
+$env:PORT = "8080"
+$env:HOST = "0.0.0.0"
+$env:ENVIRONMENT = "development"
+$env:ALLOWED_ORIGINS = "*"
+
+# macOS/Linux
+export PORT=8080
+export HOST=0.0.0.0
+export ENVIRONMENT=development
+export ALLOWED_ORIGINS="*"
+```
+
+5. **Run the backend**
+```bash
+# With uvicorn directly
+uvicorn main:app --reload --host 0.0.0.0 --port 8080
+
+# Or using the Python script
+python main.py
+```
+
+6. **Access API documentation**
+- Swagger UI: http://localhost:8080/docs
+- ReDoc: http://localhost:8080/redoc
+
+7. **Deactivate virtual environment (when done)**
+```bash
+deactivate
+```
+
+### Frontend Setup
+
+1. **Navigate to frontend directory**
+```bash
 cd nuxt-app
 ```
 
 2. **Install dependencies**
 ```bash
 npm install
+# or
+yarn install
 ```
 
 3. **Configure environment**
 ```bash
+# Create .env file
 cp .env.example .env
-# Edit .env with your configuration
+
+# Edit .env file with your configuration
+NUXT_PUBLIC_API_URL=http://localhost:8080
+NUXT_PUBLIC_APP_NAME=Item Management System
 ```
 
 4. **Run development server**
 ```bash
 npm run dev
+# or
+yarn dev
 ```
 
-The application will be available at `http://localhost:3000`
+5. **Access frontend**
+- Application: http://localhost:3000
 
-### Running with Mock API
+## 🐳 Docker Deployment
 
-Start both the frontend and mock API:
-```bash
-# Terminal 1 - Start mock API
-npm run mock-api
-
-# Terminal 2 - Start frontend
-npm run dev
-```
-
-## 🐳 Docker
-
-### Build Docker Image
+### Build Images
 
 ```bash
-docker build -t items-frontend:latest .
+# Build backend image
+docker build -t items-backend:latest ./backend
+
+# Build frontend image
+docker build -t items-frontend:latest ./nuxt-app
 ```
 
-### Run with Docker
+### Run with Docker Compose
 
 ```bash
-docker run -p 3000:3000 \
-  -e NUXT_PUBLIC_API_URL=http://your-backend:8080 \
-  items-frontend:latest
+# Start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
 ```
 
-### Docker Compose
+### Environment Variables
 
-Start the entire stack with mock API:
+Create a `.env` file in the root directory:
 
-```bash
-docker-compose up
+```env
+# Backend
+ENVIRONMENT=production
+PORT=8080
+HOST=0.0.0.0
+LOG_LEVEL=info
+ALLOWED_ORIGINS=*
+
+# Frontend
+NODE_ENV=production
+NUXT_PUBLIC_API_URL=http://fastapi-backend:8080
+NUXT_PUBLIC_APP_NAME=Item Management System
+API_SECRET=your-secret-key
 ```
-
-This will start:
-- Frontend on http://localhost:3000
-- Mock API on http://localhost:8080
 
 ## ☸️ Kubernetes Deployment
 
-### Apply all manifests
+### Deploy to Kubernetes
 
 ```bash
-kubectl apply -k k8s/
-```
-
-### Or apply individually
-
-```bash
+# Create namespace
 kubectl apply -f k8s/namespace.yaml
-kubectl apply -f k8s/configmap.yaml
-kubectl apply -f k8s/secret.yaml
-kubectl apply -f k8s/deployment.yaml
-kubectl apply -f k8s/service.yaml
-kubectl apply -f k8s/hpa.yaml
-kubectl apply -f k8s/ingress.yaml
+
+# Apply all manifests
+kubectl apply -k k8s/
+
+# Or apply individually
+kubectl apply -f backend/k8s/
+kubectl apply -f nuxt-app/k8s/
 ```
 
-### Verify deployment
+### Verify Deployment
 
 ```bash
+# Check all resources
 kubectl get all -n items-app
+
+# View logs
+kubectl logs -n items-app -l app=items-backend
 kubectl logs -n items-app -l app=items-frontend
+
+# Port forward for local access
+kubectl port-forward -n items-app service/frontend-service 3000:3000
+kubectl port-forward -n items-app service/backend-service 8080:8080
 ```
 
-## 🔧 Configuration
+## 📚 API Documentation
 
-All configuration is externalized through environment variables:
+The backend automatically generates OpenAPI documentation:
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `NODE_ENV` | Environment (development/production) | production |
-| `PORT` | Server port | 3000 |
-| `HOST` | Server host | 0.0.0.0 |
-| `NUXT_PUBLIC_API_URL` | Backend API URL | http://localhost:8080 |
-| `NUXT_PUBLIC_APP_NAME` | Application name | Item Management System |
-| `API_SECRET` | Secret key for API auth | - |
+- **Swagger UI**: http://localhost:8080/docs
+- **ReDoc**: http://localhost:8080/redoc
 
-## 📁 Project Structure
+### API Endpoints
 
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/items` | Get all items |
+| POST | `/items` | Create new item |
+| GET | `/items/{id}` | Get item by ID |
+| PUT | `/items/{id}` | Update item |
+| DELETE | `/items/{id}` | Delete item |
+| GET | `/health` | Health check |
+
+### Example Requests
+
+```bash
+# Get all items
+curl http://localhost:8080/items
+
+# Create item
+curl -X POST http://localhost:8080/items \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Apple","quantity":42}'
+
+# Update item
+curl -X PUT http://localhost:8080/items/1 \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Green Apple","quantity":50}'
+
+# Delete item
+curl -X DELETE http://localhost:8080/items/1
 ```
-nuxt-app/
-├── pages/              # Vue pages
-│   ├── index.vue      # Home page
-│   └── items.vue      # Items management
-├── components/         # Vue components
-├── plugins/           # Nuxt plugins
-├── server/            # Server middleware
-├── k8s/               # Kubernetes manifests
-├── docker-compose.yml # Docker Compose config
-├── Dockerfile         # Docker image definition
-└── nuxt.config.ts     # Nuxt configuration
-```
+
+## 📝 12-Factor Implementation
+
+This application follows the [12-factor app methodology](https://12factor.net/):
+
+1. **Codebase**: Single codebase tracked in Git
+2. **Dependencies**: Explicitly declared in requirements.txt/package.json
+3. **Config**: Configuration via environment variables
+4. **Backing services**: No database in this lab (stateless)
+5. **Build, release, run**: Separated via Docker
+6. **Processes**: Stateless processes
+7. **Port binding**: Services bind to ports via env vars
+8. **Concurrency**: Horizontal scaling via replicas
+9. **Disposability**: Fast startup/graceful shutdown
+10. **Dev/prod parity**: Docker ensures consistency
+11. **Logs**: Logs to stdout/stderr
+12. **Admin processes**: Not applicable for this lab
 
 ## 🧪 Testing
+
+### Backend Tests
+
+```bash
+cd backend
+# Activate virtual environment first
+source venv/bin/activate  # Linux/macOS
+# or
+venv\Scripts\activate  # Windows
+
+# Run tests
+pytest
+```
 
 ### Manual Testing
 
@@ -150,79 +321,41 @@ nuxt-app/
 3. **Edit Item**: Click "Edit" on any item
 4. **Delete Item**: Click "Delete" to remove an item
 
-### API Testing
+## 🐋 Container Images
 
-```bash
-# Get all items
-curl http://localhost:3000/api/items
+Public container images are available on Docker Hub:
 
-# Create new item
-curl -X POST http://localhost:3000/api/items \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Test Item","quantity":10}'
+- **Frontend**: 
+- **Backend**: 
 
-# Update item
-curl -X PUT http://localhost:3000/api/items/1 \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Updated Item","quantity":20}'
+## 📄 Project Structure
 
-# Delete item
-curl -X DELETE http://localhost:3000/api/items/1
 ```
-
-## 📊 Monitoring
-
-### Health Checks
-
-- Liveness: `GET /`
-- Readiness: `GET /`
-
-### Logs
-
-```bash
-# Docker logs
-docker logs items-frontend
-
-# Kubernetes logs
-kubectl logs -n items-app -l app=items-frontend -f
+Distributed-Systems-Lab/
+├── backend/
+│   ├── main.py              # FastAPI application
+│   ├── requirements.txt     # Python dependencies
+│   ├── Dockerfile          # Backend container definition
+│   ├── test_main.py        # Backend tests
+│   └── k8s/                # Backend K8s manifests
+├── nuxt-app/
+│   ├── pages/              # Vue pages
+│   ├── components/         # Vue components
+│   ├── Dockerfile          # Frontend container definition
+│   ├── package.json        # Node dependencies
+│   └── k8s/                # Frontend K8s manifests
+├── docker-compose.yml      # Multi-container setup
+├── REST_API.json          # API specification
+└── README.md              # This file
 ```
-
-## 🚢 Production Deployment
-
-1. **Build production image**
-```bash
-docker build -t your-registry/items-frontend:v1.0.0 .
-docker push your-registry/items-frontend:v1.0.0
-```
-
-2. **Update Kubernetes deployment**
-```bash
-kubectl set image deployment/frontend-deployment \
-  frontend=your-registry/items-frontend:v1.0.0 \
-  -n items-app
-```
-
-3. **Monitor rollout**
-```bash
-kubectl rollout status deployment/frontend-deployment -n items-app
-```
-
-## 📝 12-Factor App Implementation
-
-See [12-FACTOR.md](./12-FACTOR.md) for detailed implementation notes.
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
 
 ## 📄 License
 
-This project is licensed under the MIT License.
+This project is part of the Distributed Systems Lab course.
 
-## 🔗 Links
+## 👥 Team
 
-- [Container Image](https://hub.docker.com/r/yasait01/items-frontend)
+- Yahya Sarmini
+- Karim ashraf
+
+---
